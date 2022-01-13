@@ -1,6 +1,6 @@
 tasks:
   - init: |
-      curl -Lo https://github.com/ldc-developers/ldc/releases/download/v1.28.0/ldc2-1.28.0-linux-x86_64.tar.xz
+      curl -Lo ldc2.tar.xz --url https://github.com/ldc-developers/ldc/releases/download/v1.28.0/ldc2-1.28.0-linux-x86_64.tar.xz
     command: |
       xz -d ldc2.tar.xz
       tar -xf ldc2.tar
