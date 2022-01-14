@@ -2,7 +2,7 @@ import std.net.curl, std.json;
 import std.algorithm.searching : canFind;
 import std.json;
 import std.stdio, std.conv : to; //debugging
-class Database {
+private class Database {
     ///Used for visual purposes and organization.
     public string name;
     ///The client used for making POST and GET requests to the API.
@@ -11,7 +11,7 @@ class Database {
     protected string key;
     ///The API URL endpoint that the client uses to access the database.
     protected string endpoint;
-    protected string restEndpoint;
+    private string restEndpoint;
     ///The constructor for the Database class, but it is recommended to use the init() function. Remember to use the service_role key for the keyy variable if you have RLS enabled with no policies.
     this(string endpointt, string keyy, string namee) {
         key = keyy;
@@ -22,7 +22,7 @@ class Database {
         if (!endpointt.canFind("https://")) {
             temp_endpoint = "https://" ~ temp_endpoint;
         }
-        endpoint = endpointt;
+        endpoint = temp_endpoint;
         restEndpoint = endpoint ~ "/rest/v1/";
         name = namee;
         client = HTTP(); //remove endpointt, find a way to manipulate url afterwards
@@ -66,11 +66,11 @@ class Database {
 ///The same as Database, but the member functions return the naked JSONValue instead of a modified
 class LLDatabase : Database { //TODO: CHANGE THE FUNCTIONS
 
-    override public string endpoint;
-    override public string key;
+    public string LLendpoint;
+    public string LLkey;
     this(string endpointt, string keyy, string namee) {
         super(endpointt, keyy, namee);
-        key = keyy;
+        LLkey = keyy;
         auto temp_endpoint = endpointt;
         if (!endpointt.canFind(".supabase.co")) {
             temp_endpoint = temp_endpoint ~ ".supabase.co";
@@ -78,34 +78,31 @@ class LLDatabase : Database { //TODO: CHANGE THE FUNCTIONS
         if (!endpointt.canFind("https://")) {
             temp_endpoint = "https://" ~ temp_endpoint;
         }
-        endpoint = endpointt;
+        LLendpoint = temp_endpoint;
         name = namee;
         client = HTTP(); //remove endpointt, find a way to manipulate url afterwards
     }
-    @property auto getRows(string table) {
+    @property override auto getRows(string table) {
         //client.method = HTTP.Method.get;
         setGetHeaders();
         auto x = get(restEndpoint ~ table ~ "?select=*", client);
         auto json = parseJSON(x);
-        string[string] ret;
-        return ret;
+        return json;
         //client.perform(endpoint ~ "/rest/v1/" ~ name ~ "?select=*", client);
     }
     ///Gets a specific column and all of its values in a map
-    @property auto getColumn(string table, string column) {
+    @property override auto getColumn(string table, string column) {
         setGetHeaders();
         auto x = get(restEndpoint ~ table ~ "?select=" ~ column, client);
-        auto json = parseJSON(x).array();
-        string[string] ret;
-        return json[1];
+        auto json = parseJSON(x);
+        return json;
     }
     ///Gets a specific row and all of its values in a map
-    @property auto getRow(string table, int row) {
+    @property override auto getRow(string table, int row) {
         setGetHeaders();
         auto json = get(restEndpoint ~ table ~ "?select=*", client);
-        auto x = parseJSON(json)[row];
-        string[string] ret;
-        return ret;
+        auto x = parseJSON(json)[row - 1];
+        return x;
     }
 }
 ///Initializes and returns a Database class. You may omit the "https://" or ".supabase.co" section of the endpoint for readability.
