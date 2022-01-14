@@ -56,7 +56,7 @@ private class Database {
         return json;
         //client.perform(endpoint ~ "/rest/v1/" ~ name ~ "?select=*", client);
     }
-    @property auto makeRow(string table, )
+    //@property auto makeRow(string table, )
     ///Gets a specific column and all of its values in an array
     @property auto getColumn(string table, string column) {
         setGetHeaders();
