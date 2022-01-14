@@ -32,21 +32,28 @@ class Database {
         client.addRequestHeader("apikey", key);
         client.addRequestHeader("Authorization",  "Bearer " ~ key);
     }
-    ///Returns all rows and columns
+    ///Returns all rows and columns in a map array
     @property auto getRows(string table) {
         //client.method = HTTP.Method.get;
         setGetHeaders();
         auto x = get(restEndpoint ~ table ~ "?select=*", client);
         auto json = parseJSON(x).array();
+        foreach (i, v; json) {
+            v = v.object();
+        }
         return json;
         //client.perform(endpoint ~ "/rest/v1/" ~ name ~ "?select=*", client);
     }
-    ///Gets a specific column and all of its values in a map
+    ///Gets a specific column and all of its values in an array
     @property auto getColumn(string table, string column) {
         setGetHeaders();
         auto x = get(restEndpoint ~ table ~ "?select=" ~ column, client);
         auto json = parseJSON(x).array();
-        return json;
+        string[] ret;
+        foreach (i, v; json) {
+            ret ~= v.object()[column];
+        }
+        return ret;
     }
     ///Gets a specific row and all of its values in a map
     @property auto getRow(string table, int row) {
@@ -57,8 +64,12 @@ class Database {
     }
 }
 ///The same as Database, but the member functions return the naked JSONValue instead of a modified
-/*class LLDatabase : Database {
+class LLDatabase : Database { //TODO: CHANGE THE FUNCTIONS
+
+    override public string endpoint;
+    override public string key;
     this(string endpointt, string keyy, string namee) {
+        super(endpointt, keyy, namee);
         key = keyy;
         auto temp_endpoint = endpointt;
         if (!endpointt.canFind(".supabase.co")) {
@@ -68,7 +79,6 @@ class Database {
             temp_endpoint = "https://" ~ temp_endpoint;
         }
         endpoint = endpointt;
-        restEndpoint = endpoint ~ "/rest/v1/";
         name = namee;
         client = HTTP(); //remove endpointt, find a way to manipulate url afterwards
     }
@@ -97,7 +107,7 @@ class Database {
         string[string] ret;
         return ret;
     }
-}*/
+}
 ///Initializes and returns a Database class. You may omit the "https://" or ".supabase.co" section of the endpoint for readability.
 Database init(string key, string endpoint, string name = "db") {
     auto xyz = new Database(endpoint, key, name);
