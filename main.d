@@ -13,7 +13,7 @@ private class Database {
     protected string endpoint;
     private string restEndpoint;
     ///The constructor for the Database class, but it is recommended to use the init() function. Remember to use the service_role key for the keyy variable if you have RLS enabled with no policies.
-    this(string endpointt, string keyy, string namee) {
+    this(string endpointt, string keyy, string namee = "db") {
         key = keyy;
         auto temp_endpoint = endpointt;
         if (!endpointt.canFind(".supabase.co")) {
@@ -26,6 +26,15 @@ private class Database {
         restEndpoint = endpoint ~ "/rest/v1/";
         name = namee;
         client = HTTP(); //remove endpointt, find a way to manipulate url afterwards
+    }
+    @property auto getKey() {
+        return key;
+    }
+    @property auto getEndpoint() {
+        return endpoint;
+    }
+    @property void setEndpoint(string endpointt) {
+        endpoint = endpointt;
     }
     protected void setGetHeaders() {
         client.clearRequestHeaders();
@@ -51,7 +60,7 @@ private class Database {
         auto json = parseJSON(x).array();
         string[] ret;
         foreach (i, v; json) {
-            ret ~= v.object()[column];
+            ret ~= to!string(v.object()[column]);
         }
         return ret;
     }
@@ -63,13 +72,13 @@ private class Database {
         return x;
     }
 }
-///The same as Database, but the member functions return the naked JSONValue instead of a modified
+///The same as Database, but the member functions return the naked JSONValue instead of a modified value, and requires more context on the endpoint (you have to add /rest/v1, /auth/v1, etc.)
 class LLDatabase : Database { //TODO: CHANGE THE FUNCTIONS
 
     public string LLendpoint;
     public string LLkey;
-    this(string endpointt, string keyy, string namee) {
-        super(endpointt, keyy, namee);
+    override this(string endpointt, string keyy, string namee = "db") {
+        //super(endpointt, keyy, namee);
         LLkey = keyy;
         auto temp_endpoint = endpointt;
         if (!endpointt.canFind(".supabase.co")) {
@@ -82,7 +91,7 @@ class LLDatabase : Database { //TODO: CHANGE THE FUNCTIONS
         name = namee;
         client = HTTP(); //remove endpointt, find a way to manipulate url afterwards
     }
-    @property override auto getRows(string table) {
+    @property auto getRowsLL(string table) {
         //client.method = HTTP.Method.get;
         setGetHeaders();
         auto x = get(restEndpoint ~ table ~ "?select=*", client);
@@ -91,14 +100,14 @@ class LLDatabase : Database { //TODO: CHANGE THE FUNCTIONS
         //client.perform(endpoint ~ "/rest/v1/" ~ name ~ "?select=*", client);
     }
     ///Gets a specific column and all of its values in a map
-    @property override auto getColumn(string table, string column) {
+    @property auto getColumnLL(string table, string column) {
         setGetHeaders();
         auto x = get(restEndpoint ~ table ~ "?select=" ~ column, client);
         auto json = parseJSON(x);
         return json;
     }
-    ///Gets a specific row and all of its values in a map
-    @property override auto getRow(string table, int row) {
+    ///Gets a specific row and all of its values in a map, row indexes start at 1
+    @property auto getRowLL(string table, int row) {
         setGetHeaders();
         auto json = get(restEndpoint ~ table ~ "?select=*", client);
         auto x = parseJSON(json)[row - 1];
@@ -113,5 +122,7 @@ Database init(string key, string endpoint, string name = "db") {
 
 void main() {
     auto x = init("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MjA0MTQ0MSwiZXhwIjoxOTU3NjE3NDQxfQ.THriT1EqLkizCHPVaHb1Y1I6i2J-MuDQybYujVm6T2I", "https://ogkklizgscwqlkrfndpv.supabase.co");
-    writeln(to!string(x.getRow("hello_world", 1))); //WORKS!!!!! prints a map with the key and values of all of the columns of the specific rows
+    auto y = new LLDatabase("https://ogkklizgscwqlkrfndpv.supabase.co/rest/v1", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MjA0MTQ0MSwiZXhwIjoxOTU3NjE3NDQxfQ.THriT1EqLkizCHPVaHb1Y1I6i2J-MuDQybYujVm6T2I");
+    writeln(to!string(y.getRowsLL("hello_world")));
+    //writeln(to!string(x.getRows("hello_world"))); //WORKS!!!!! prints a map with the key and values of all of the columns of the specific rows
 }
