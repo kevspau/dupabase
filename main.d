@@ -36,19 +36,25 @@ private class Database {
     @property void setEndpoint(string endpointt) {
         endpoint = endpointt;
     }
-    protected void setGetHeaders() {
+    protected void setHeaders() {
         client.clearRequestHeaders();
         client.addRequestHeader("apikey", key);
         client.addRequestHeader("Authorization",  "Bearer " ~ key);
     }
-    ///Returns all rows and columns in a map array
-    @property auto getRows(string table, string pagination = "0-0") {
+    ///Returns all rows, or returns a list of rows in the given filter or pagination. Currently only the .eq() function is supported for filtering. Not given the @property attribute so that filtering and pagination may be added as parameters
+    auto getRows(string table, string pagination = "0-0", string[string] filter = ["#000nil000#":"#000nil000#"]) {
         //client.method = HTTP.Method.get;
-        setGetHeaders();
+        setHeaders();
+        string filters = "";
+        if (filter == ["#000nil000#":"#000nil000#"]) {
+            foreach (k, v; filter) {
+                filters ~= k ~ "=eq." ~ v ~ "&";
+            }
+        }
         if (pagination != "0-0") {
             client.addRequestHeader("Range", pagination);
         }
-        auto x = get(restEndpoint ~ table ~ "?select=*", client);
+        auto x = get(restEndpoint ~ table ~ "?" ~ filters ~ "select=*", client);
         auto json = parseJSON(x).array();
         foreach (i, v; json) {
             v = v.object();
@@ -59,7 +65,7 @@ private class Database {
     //@property auto makeRow(string table, )
     ///Gets a specific column and all of its values in an array
     @property auto getColumn(string table, string column) {
-        setGetHeaders();
+        setHeaders();
         auto x = get(restEndpoint ~ table ~ "?select=" ~ column, client);
         auto json = parseJSON(x).array();
         string[] ret;
@@ -70,7 +76,7 @@ private class Database {
     }
     ///Gets a specific row and all of its values in a map
     @property auto getRow(string table, int row) {
-        setGetHeaders();
+        setHeaders();
         auto json = get(restEndpoint ~ table ~ "?select=*", client);
         auto x = parseJSON(json)[row - 1].object();
         return x;
@@ -88,24 +94,33 @@ class LLDatabase : Database { //TODO: CHANGE THE FUNCTIONS
         name = namee;
         client = HTTP(); //remove endpointt, find a way to manipulate url afterwards
     }
-    @property auto getRowsLL(string table) {
+    auto getRowsLL(string table, string pagination = "0-0", string[string] filter = ["#000nil000#":"#000nil000#"]) {
         //client.method = HTTP.Method.get;
-        setGetHeaders();
-        auto x = get(LLendpoint ~ table ~ "?select=*", client);
+        setHeaders();
+        string filters = "";
+        if (filter == ["#000nil000#":"#000nil000#"]) {
+            foreach (k, v; filter) {
+                filters ~= k ~ "=eq." ~ v ~ "&";
+            }
+        }
+        if (pagination != "0-0") {
+            client.addRequestHeader("Range", pagination);
+        }
+        auto x = get(LLendpoint ~ table ~ "?" ~ filters ~ "select=*", client);
         auto json = parseJSON(x);
         return json;
         //client.perform(endpoint ~ "/rest/v1/" ~ name ~ "?select=*", client);
     }
     ///Gets a specific column and all of its values in a map
     @property auto getColumnLL(string table, string column) {
-        setGetHeaders();
+        setHeaders();
         auto x = get(LLendpoint ~ table ~ "?select=" ~ column, client);
         auto json = parseJSON(x);
         return json;
     }
     ///Gets a specific row and all of its values in a map, row indexes start at 1
     @property auto getRowLL(string table, int row) {
-        setGetHeaders();
+        setHeaders();
         auto json = get(LLendpoint ~ table ~ "?select=*", client);
         auto x = parseJSON(json)[row - 1];
         return x;
@@ -118,8 +133,8 @@ Database init(string endpoint, string key, string name = "db") {
 }
 
 void main() {
-    auto x = init("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MjA0MTQ0MSwiZXhwIjoxOTU3NjE3NDQxfQ.THriT1EqLkizCHPVaHb1Y1I6i2J-MuDQybYujVm6T2I", "https://ogkklizgscwqlkrfndpv.supabase.co");
+    auto x = init("https://ogkklizgscwqlkrfndpv.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MjA0MTQ0MSwiZXhwIjoxOTU3NjE3NDQxfQ.THriT1EqLkizCHPVaHb1Y1I6i2J-MuDQybYujVm6T2I");
     auto y = new LLDatabase("https://ogkklizgscwqlkrfndpv.supabase.co/rest/v1/", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY0MjA0MTQ0MSwiZXhwIjoxOTU3NjE3NDQxfQ.THriT1EqLkizCHPVaHb1Y1I6i2J-MuDQybYujVm6T2I");
-    writeln(to!string(y.getRowsLL("hello_world")));
+    writeln(to!string(x.getRows("hello_world")));
     //writeln(to!string(x.getRows("hello_world"))); //WORKS!!!!! prints a map with the key and values of all of the columns of the specific rows
 }
