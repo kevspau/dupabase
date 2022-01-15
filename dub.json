@@ -1,0 +1,10 @@
+{
+	"authors": [
+		"sharpcdf"
+	],
+	"copyright": "Copyright © 2022, sharpcdf",
+	"description": "A wrapper aroung the PostgREST API for Supabase.",
+	"license": "MIT",
+	"name": "dupabase",
+	"sourcePaths": ["."]
+}
