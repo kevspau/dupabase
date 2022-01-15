@@ -4,6 +4,7 @@ import std.net.curl, std.json;
 import std.algorithm.searching : canFind;
 import std.json;
 import std.stdio, std.conv : to; //debugging
+///The main class used for sending API requests.
 private class Database {
     ///Used for visual purposes and organization.
     public string name;
