@@ -5,7 +5,7 @@ import std.algorithm.searching : canFind;
 import std.json;
 import std.stdio, std.conv : to; //debugging
 ///The main class used for sending API requests.
-private class Database {
+class Database {
     ///Used for visual purposes and organization.
     public string name;
     ///The client used for making POST and GET requests to the API.
