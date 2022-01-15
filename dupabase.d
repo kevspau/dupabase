@@ -112,7 +112,7 @@ class LLDatabase : Database { //TODO: CHANGE THE FUNCTIONS
         if (pagination != "0-0") {
             client.addRequestHeader("Range", pagination);
         }
-        auto x = get(LLendpoint ~ table ~ "?" ~ filters ~ "select=*", client);
+        auto x = get(LLendpoint ~ "/" ~ table ~ "?" ~ filters ~ "select=*", client);
         auto json = parseJSON(x);
         return json;
         //client.perform(endpoint ~ "/rest/v1/" ~ name ~ "?select=*", client);
