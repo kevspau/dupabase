@@ -10,7 +10,7 @@ As of writing this, dupabase only has the ability to get data, not post it.
 import dupabase;
 import std.stdio;
 
-auto key = import("key.txt")
+auto key = import("key.txt");
 void main() {
   auto db = init("something.supabase.co", key);
   writeln(db.getRows("test_table"));
