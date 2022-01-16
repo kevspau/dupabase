@@ -1,7 +1,7 @@
 module dupabase;
 
 import std.net.curl, std.json;
-import std.algorithm.searching : canFind;
+import std.algorithm.searching;
 import std.json;
 import std.stdio, std.conv : to; //debugging
 ///The main class used for sending API requests.
@@ -19,10 +19,10 @@ class Database {
     this(string endpointt, string keyy, string namee) {
         key = keyy;
         auto temp_endpoint = endpointt;
-        if (!endpointt.canFind(".supabase.co")) {
+        if (!endpointt.endsWith(".supabase.co")) {
             temp_endpoint = temp_endpoint ~ ".supabase.co";
         }
-        if (!endpointt.canFind("https://")) {
+        if (!endpointt.startsWith("https://")) {
             temp_endpoint = "https://" ~ temp_endpoint;
         }
         endpoint = temp_endpoint;
