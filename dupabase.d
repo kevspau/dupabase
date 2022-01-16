@@ -66,8 +66,23 @@ class Database {
         //client.perform(endpoint ~ "/rest/v1/" ~ name ~ "?select=*", client);
     }
     ///Currently in progress. Will allow you to append one or more rows to the database table.
-    @disable auto makeRows(string table, string[string] data ...) {
-
+    @disable auto makeRows(string table, string[string][] data ...) { //TODO: fix constantly getting response code 400
+        setHeaders();
+        client.addRequestHeader("Content-Type", "application/json");
+        data.to!JSONValue;
+        JSONValue[] postArr;
+        string postObj;
+        if (data.length > 1) {
+            foreach (i, v; data) {
+                auto postValue = JSONValue(v);
+                postArr ~= postValue;
+            }
+            return post(restEndpoint ~ table, postArr.to!string(), client);
+        } else {
+            postObj ~= JSONValue(data[0]).to!string();
+            return post(restEndpoint ~ table, postObj, client);
+        }
+        return post(restEndpoint ~ table, "{\"hello\":\"world\"}", client);
     }
     ///Gets a specific column and all of its values in an array
     @property auto getColumn(string table, string column) {
