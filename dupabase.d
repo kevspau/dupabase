@@ -1,8 +1,8 @@
 module dupabase;
 
 import std.net.curl, std.json;
-import std.algorithm.searching;
-import std.json;
+import std.algorithm.searching, std.algorithm.mutation;
+import std.json, std.array;
 import std.stdio, std.conv : to; //debugging
 ///The main class used for sending API requests.
 class Database {
@@ -30,26 +30,35 @@ class Database {
         name = namee;
         client = HTTP(); //remove endpointt, find a way to manipulate url afterwards
     }
-    @property auto getKey() {
+    ///Returns the currently set key.
+    @property auto gkey() {
         return key;
     }
-    @property auto getEndpoint() {
+    ///Changes the currently set key to keyy.
+    @property void skey(string keyy) {
+        key = keyy;
+    }
+    ///Returns the currently set endpoint.
+    @property auto gendpoint() {
         return endpoint;
     }
-    @property void setEndpoint(string endpointt) {
+    ///For setting the endpoint to a different project.
+    @property void sendpoint(string endpointt) {
         endpoint = endpointt;
+        restEndpoint = endpointt ~ "/rest/v1/";
     }
     protected void setHeaders() {
+        client.url = "";
         client.clearRequestHeaders();
         client.addRequestHeader("apikey", key);
         client.addRequestHeader("Authorization",  "Bearer " ~ key);
     }
     ///Returns all rows, or returns a list of rows in the given filter or pagination. Currently only the .eq() function is supported for filtering. Not given the @property attribute so that filtering and pagination may be added as parameters
-    auto getRows(string table, string pagination = "0-0", string[string] filter = ["#000nil000#":"#000nil000#"]) {
+    auto getRows(string table, string pagination = "0-0", string[string] filter = ["":""]) {
         //client.method = HTTP.Method.get;
         setHeaders();
         string filters = "";
-        if (filter == ["#000nil000#":"#000nil000#"]) {
+        if (filter != ["":""]) {
             foreach (k, v; filter) {
                 filters ~= k ~ "=eq." ~ v ~ "&";
             }
@@ -65,11 +74,39 @@ class Database {
         return json;
         //client.perform(endpoint ~ "/rest/v1/" ~ name ~ "?select=*", client);
     }
-    ///Currently in progress. Will allow you to append one or more rows to the database table.
-    @disable auto makeRows(string table, string[string][] data ...) { //TODO: fix constantly getting response code 400
+    ///Deletes all rows that have the given filter. At the moment, does not work with values that include spaces.
+    @property auto deleteRows(string table, string[string] filter) {
+        setHeaders();
+        char[] filters;
+        foreach (k, v; filter) {
+            filters ~= k ~ "=eq." ~ v ~ "&";
+        }
+        filters = filters.remove(filters.length-1);
+        /*filters = filters.replace("=", "=\"");
+        filters = filters ~ "\"";
+        writeln(filters.to!string());*/
+        return del(restEndpoint ~ table ~ "?" ~ filters.to!string(), client);
+    }
+    ///Updates all rows that match the given filter with the given data. Returns a CurlCode.
+    auto updateRows(string table, string[string] filter, string[string] data) {
+        setHeaders();
+        client.method(HTTP.Method.patch);
+        char[] filters;
+        foreach (k, v; filter) {
+            filters ~= k ~ "=eq." ~ v ~ "&";
+        }
+        filters = filters.remove(filters.length-1);
+        client.url = restEndpoint ~ table ~ "?" ~ filters;
+        client.setPostData(JSONValue(data).to!string(), "application/json");
+        return client.perform();
+    }
+    ///Allows you to append one or more rows to the database table. Not completely trustable, as it randomly returns code 400s. Returns the POST request to the server. Set upsert to true unless you know what you're doing.
+    auto makeRows(string table, bool upsert, string[string][] data ...) { //TODO: fix constantly getting response code 400
         setHeaders();
         client.addRequestHeader("Content-Type", "application/json");
-        data.to!JSONValue;
+        if (upsert) {
+            client.addRequestHeader("Prefer", "resolution=merge-duplicates");
+        }
         JSONValue[] postArr;
         string postObj;
         if (data.length > 1) {
@@ -79,7 +116,8 @@ class Database {
             }
             return post(restEndpoint ~ table, postArr.to!string(), client);
         } else {
-            postObj ~= JSONValue(data[0]).to!string();
+            postObj = JSONValue(data[0]).to!string();
+            //writeln(postObj);
             return post(restEndpoint ~ table, postObj, client);
         }
         return post(restEndpoint ~ table, "{\"hello\":\"world\"}", client);
