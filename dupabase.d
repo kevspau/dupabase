@@ -100,7 +100,7 @@ class Database {
         client.setPostData(JSONValue(data).to!string(), "application/json");
         return client.perform();
     }
-    ///Allows you to append one or more rows to the database table. Not completely trustable, as it randomly returns code 400s. Returns the POST request to the server. Set upsert to true unless you know what you're doing.
+    ///Appends one or more rows to the given table. Not completely trustable, as it randomly returns code 400s. Returns the POST request to the server. Set upsert to true unless you know what you're doing.
     auto makeRows(string table, bool upsert, string[string][] data ...) { //TODO: fix constantly getting response code 400
         setHeaders();
         client.addRequestHeader("Content-Type", "application/json");
