@@ -186,7 +186,7 @@ class LLDatabase : Database { //TODO: CHANGE THE FUNCTIONS
     }
 }
 ///Initializes and returns a Database class. You may omit the "https://" or ".supabase.co" section of the endpoint for readability.
-Database init(string endpoint, string key, string name = "db") {
+Database newDB(string endpoint, string key, string name = "db") {
     auto xyz = new Database(endpoint, key, name);
     return xyz;
 }
