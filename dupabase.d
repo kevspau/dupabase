@@ -34,18 +34,9 @@ class Database {
     @property auto gkey() {
         return key;
     }
-    ///Changes the currently set key to keyy.
-    @property void skey(string keyy) {
-        key = keyy;
-    }
     ///Returns the currently set endpoint.
     @property auto gendpoint() {
         return endpoint;
-    }
-    ///For setting the endpoint to a different project.
-    @property void sendpoint(string endpointt) {
-        endpoint = endpointt;
-        restEndpoint = endpointt ~ "/rest/v1/";
     }
     protected void setHeaders() {
         client.url = "";
