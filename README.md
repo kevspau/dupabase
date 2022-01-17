@@ -14,5 +14,9 @@ auto key = import("key.txt");
 void main() {
   auto db = init("something.supabase.co", key);
   writeln(db.getRows("test_table"));
+  db.makeRows("test_table", true, ["id":"12345"]);
+  db.updateRows("test_table", ["id":"1"], ["id":"2"]);
+  db.deleteRows("test_table", ["id":"12345"]);
+  writeln(db.getRow("test_table", 2));
 }
 ```
