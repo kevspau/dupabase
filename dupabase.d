@@ -15,6 +15,9 @@ class Database {
     ///The API URL endpoint that the client uses to access the database.
     protected string endpoint;
     private string restEndpoint;
+    private string authEndpoint;
+    ///The access token of the currently logged in user. This is changed every time Database.login() is called.
+    public string access_token;
     ///The constructor for the Database class, but it is recommended to use the init() function. Remember to use the service_role key for the keyy variable if you have RLS enabled with no policies.
     this(string endpointt, string keyy, string namee) {
         key = keyy;
@@ -27,6 +30,7 @@ class Database {
         }
         endpoint = temp_endpoint;
         restEndpoint = endpoint ~ "/rest/v1/";
+        authEndpoint = endpoint ~ "/auth/v1/";
         name = namee;
         client = HTTP(); //remove endpointt, find a way to manipulate url afterwards
     }
@@ -43,6 +47,54 @@ class Database {
         client.clearRequestHeaders();
         client.addRequestHeader("apikey", key);
         client.addRequestHeader("Authorization",  "Bearer " ~ key);
+    }
+    protected void setAuthPostHeaders() {
+        client.clearRequestHeaders();
+        client.addRequestHeader("apikey", key);
+        client.addRequestHeader("Content-Type", "application/json");
+    }
+    protected void setAuthHeaders() {
+        client.clearRequestHeaders();
+        client.addRequestHeader("apikey", key);
+    }
+    ///Creates a new user using the given email and password. Returns a CurlCode.
+    @property auto newUser(string email, string password) {
+        setAuthPostHeaders();
+        client.setPostData(JSONValue(["email":email, "password":password]).to!string(), "application/json");
+        client.url = authEndpoint ~ "signup";
+        //writeln(JSONValue(["email":email, "password":password]).to!string());
+        return client.perform();//post(authEndpoint ~ "signup", JSONValue(["email":email, "password":password]).to!string(), client);
+    }
+    ///Logs into a users account using the given email and password. This changes the access_token.
+    auto login(string email, string password, string grant_type = "password") {
+        setAuthPostHeaders();
+        auto json = post(authEndpoint ~ "token?grant_type=" ~ grant_type, JSONValue(["email":email, "password":password]).to!string(), client);
+        access_token = json.parseJSON().object["access_token"].str;
+        return json;
+    }
+    ///In progress. Will allow you to sign into a database using the given third party service.
+    @disable auto externalLogin(string service = "github") {
+        setAuthPostHeaders();
+        return post(authEndpoint ~ "token", JSONValue(["provider":service]).to!string());
+    }
+    ///Returns a map of data relating to the currently logged in user.
+    @property auto getUser() {
+        setAuthHeaders();
+        client.addRequestHeader("Authorization", "Bearer " ~ access_token);
+        auto json = get(authEndpoint ~ "user", client).parseJSON().object;
+        return json;
+    }
+    ///Logs the current user out. This also resets the access_token.
+    @property auto logout() {
+        client.clearRequestHeaders();
+        client.postData("");
+        client.addRequestHeader("apikey", key);
+        client.addRequestHeader("Authorization", "Bearer " ~ access_token);
+        client.addRequestHeader("Content-Type", "application/json");
+        client.method(HTTP.Method.post);
+        client.url = authEndpoint ~ "logout";
+        access_token = "";
+        return client.perform();
     }
     ///Returns all rows, or returns a list of rows in the given filter or pagination. Currently only the .eq() function is supported for filtering. Not given the @property attribute so that filtering and pagination may be added as parameters
     auto getRows(string table, string pagination = "0-0", string[string] filter = ["":""]) {
