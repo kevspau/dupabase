@@ -19,3 +19,11 @@ void main() {
   writeln(db.getRow("test_table", 2));
 }
 ```
+## Features not implemented
+- Log in with Magic Link via email
+- Sign up with phone & password
+- Login via SMS OTP (Requires twilio credentials)
+- Verify login via SMS OTP (Requires twilio credentials)
+- Reset password via email
+- Update a users information
+- Send a user an invite over email (Supabase note: This endpoint requires you use the `service_role_key` when initializing the client, and should only be invoked from the server, never from the client.)
