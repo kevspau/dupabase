@@ -19,7 +19,7 @@ void main() {
   writeln(db.getRow("test_table", 2));
 }
 ```
-## Features not implemented
+## Features not implemented (yet)
 - Log in with Magic Link via email
 - Sign up with phone & password
 - Login via SMS OTP (Requires twilio credentials)
