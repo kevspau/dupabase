@@ -19,18 +19,3 @@ void main() {
   writeln(db.getRow("test_table", 2));
 }
 ```
-
-## Current Progress
-
-<table>
-  <tr>
-    <th>Rest API</th>
-    <th>Auth</th>
-    <th>Realtime</th>
-  </tr>
-  <tr>
-  <td>Done</td>
-  <td>In progress</td>
-  <td>Not Done</td>
-  </tr>
-</table>
